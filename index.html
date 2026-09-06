@@ -1,0 +1,1657 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Calcul de la surface corrigée d'un logement selon le décret n° 48-1766 du 22 novembre 1948.">
+<title>Décompte de surface corrigée</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Spectral:ital,wght@0,500;0,600;1,500&display=swap">
+
+<style>
+/* ============================ tokens ============================ */
+:root{
+  --ground:#EDF1F5;
+  --surface:#FFFFFF;
+  --surface-2:#F5F8FA;
+  --line:#D3DDE6;
+  --line-soft:#E4EBF1;
+  --ink:#15222E;
+  --ink-2:#42566A;
+  --ink-3:#75879A;
+  --primary:#1D4E6E;
+  --primary-2:#2C6D95;
+  --primary-wash:#E3EDF4;
+  --brass:#9A6F22;
+  --brass-2:#B8863B;
+  --brass-wash:#F6EEDD;
+  --ok:#26654C;
+  --ok-wash:#E1EFE8;
+  --warn:#8A4110;
+  --warn-wash:#FAEBDF;
+  --danger:#8E2727;
+  --danger-wash:#F8E5E5;
+  --field:#FFFDF6;
+  --field-line:#D9C79B;
+  --shadow:0 1px 2px rgba(21,34,46,.06), 0 8px 24px -14px rgba(21,34,46,.28);
+  --radius:5px;
+  color-scheme:light;
+}
+:root:not([data-theme="light"]){
+  @media (prefers-color-scheme: dark){
+    --ground:#0D151C;
+    --surface:#141F29;
+    --surface-2:#1A2732;
+    --line:#2A3B4A;
+    --line-soft:#22303C;
+    --ink:#E4ECF3;
+    --ink-2:#A8BACA;
+    --ink-3:#7A8EA0;
+    --primary:#74B4D9;
+    --primary-2:#96CBEA;
+    --primary-wash:#17303F;
+    --brass:#D9AC5E;
+    --brass-2:#E8C486;
+    --brass-wash:#2C2415;
+    --ok:#7FCBA6;
+    --ok-wash:#15281F;
+    --warn:#E0A276;
+    --warn-wash:#2E1D11;
+    --danger:#E58F8F;
+    --danger-wash:#2E1616;
+    --field:#1B2733;
+    --field-line:#4A4029;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -14px rgba(0,0,0,.8);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0D151C;
+  --surface:#141F29;
+  --surface-2:#1A2732;
+  --line:#2A3B4A;
+  --line-soft:#22303C;
+  --ink:#E4ECF3;
+  --ink-2:#A8BACA;
+  --ink-3:#7A8EA0;
+  --primary:#74B4D9;
+  --primary-2:#96CBEA;
+  --primary-wash:#17303F;
+  --brass:#D9AC5E;
+  --brass-2:#E8C486;
+  --brass-wash:#2C2415;
+  --ok:#7FCBA6;
+  --ok-wash:#15281F;
+  --warn:#E0A276;
+  --warn-wash:#2E1D11;
+  --danger:#E58F8F;
+  --danger-wash:#2E1616;
+  --field:#1B2733;
+  --field-line:#4A4029;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -14px rgba(0,0,0,.8);
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:13.5px; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{margin:0; font-family:Spectral,Georgia,serif; font-weight:600; text-wrap:balance}
+button,input,select{font:inherit; color:inherit}
+:focus-visible{outline:2px solid var(--brass-2); outline-offset:1px}
+@media (prefers-reduced-motion:reduce){*{transition:none !important; animation:none !important}}
+
+.num{font-variant-numeric:tabular-nums}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums}
+
+/* ============================ chrome ============================ */
+.topbar{
+  position:sticky; top:0; z-index:40;
+  display:flex; align-items:center; gap:14px;
+  padding:9px 18px; background:var(--primary); color:#EAF3F8;
+  border-bottom:1px solid rgba(0,0,0,.18);
+}
+:root[data-theme="dark"] .topbar,
+:root:not([data-theme="light"]) .topbar{}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .topbar{background:#12293A}}
+:root[data-theme="dark"] .topbar{background:#12293A}
+
+.brand{display:flex; align-items:baseline; gap:9px; margin-right:auto; min-width:0}
+.brand h1{font-size:16.5px; letter-spacing:.1px; color:#fff; white-space:nowrap}
+.brand span{font-size:11px; color:#A9C9DC; letter-spacing:.05em; text-transform:uppercase; white-space:nowrap}
+.topbar .btn{background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.22); color:#EAF3F8}
+.topbar .btn:hover{background:rgba(255,255,255,.19)}
+
+.btn{
+  display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
+  padding:5px 11px; border:1px solid var(--line); border-radius:var(--radius);
+  background:var(--surface); cursor:pointer; font-size:12.5px; font-weight:500;
+  transition:background .12s, border-color .12s;
+}
+.btn:hover{background:var(--surface-2); border-color:var(--ink-3)}
+.btn--primary{background:var(--brass); border-color:var(--brass); color:#fff}
+.btn--primary:hover{background:var(--brass-2); border-color:var(--brass-2)}
+.btn--ghost{background:transparent; border-color:transparent; color:var(--ink-2); padding:3px 7px}
+.btn--ghost:hover{background:var(--surface-2); color:var(--ink)}
+.btn--sm{padding:3px 8px; font-size:11.5px}
+
+.sync{display:flex; align-items:center; gap:6px; font-size:11.5px; color:#A9C9DC; white-space:nowrap}
+.sync .dot{width:7px; height:7px; border-radius:50%; background:#7FCBA6; flex:none}
+.sync[data-state="dirty"] .dot{background:#E8C486}
+.sync[data-state="error"] .dot{background:#E58F8F}
+.sync[data-state="saving"] .dot{background:#96CBEA; animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.3}}
+
+/* ============================ layout ============================ */
+.app{
+  display:grid; grid-template-columns:216px minmax(0,1fr) 320px;
+  align-items:start; gap:0;
+  max-width:1560px; margin:0 auto;
+}
+.rail{position:sticky; top:41px; height:calc(100vh - 41px); overflow-y:auto; padding:14px 12px}
+.rail--left{border-right:1px solid var(--line-soft)}
+.rail--right{border-left:1px solid var(--line-soft); padding:14px}
+.sheet{padding:18px 22px 90px; min-width:0}
+
+@media (max-width:1280px){
+  .app{grid-template-columns:190px minmax(0,1fr) 290px}
+}
+@media (max-width:1080px){
+  .app{grid-template-columns:1fr}
+  .rail{position:static; height:auto; border:0; border-bottom:1px solid var(--line-soft)}
+  .rail--right{order:-1}
+}
+
+/* ============================ dossiers ============================ */
+.rail h2, .rail h3{
+  font-family:"IBM Plex Sans",sans-serif; font-size:10.5px; font-weight:600;
+  letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3); margin-bottom:8px;
+}
+.doclist{display:flex; flex-direction:column; gap:2px; margin:0 -4px}
+.doc{
+  display:block; width:100%; text-align:left; border:0; background:none; cursor:pointer;
+  padding:6px 8px; border-radius:var(--radius); border-left:2px solid transparent;
+}
+.doc:hover{background:var(--surface-2)}
+.doc[aria-current="true"]{background:var(--primary-wash); border-left-color:var(--primary)}
+.doc b{display:block; font-size:12.5px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.doc small{display:block; font-size:11px; color:var(--ink-3); font-variant-numeric:tabular-nums}
+.doc em{float:right; font-style:normal; font-size:11px; color:var(--primary); font-weight:600; font-variant-numeric:tabular-nums}
+.doc .sup{float:right; margin-left:4px; border:0; background:none; cursor:pointer; color:var(--ink-3);
+  font-size:11px; line-height:1; padding:1px 3px; border-radius:3px; opacity:0}
+.doc:hover .sup{opacity:1}
+.doc .sup:hover{color:var(--danger); background:var(--danger-wash)}
+
+.grp{margin:0 -4px 10px}
+.grp > header{display:flex; flex-wrap:wrap; align-items:center; gap:1px 4px; padding:4px 6px 3px;
+  border-bottom:1px solid var(--line-soft); margin-bottom:3px}
+.grp > header b{flex:1 1 100%; font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase;
+  color:var(--ink-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0}
+.grp > header > span{flex:1 1 auto}
+.grp > header span{font-size:10.5px; color:var(--ink-3); font-variant-numeric:tabular-nums; white-space:nowrap}
+.ico{border:0; background:none; cursor:pointer; color:var(--ink-3); font-size:12px; line-height:1;
+  padding:2px 4px; border-radius:3px; flex:none}
+.ico:hover{background:var(--surface-2); color:var(--ink)}
+.ico--del:hover{color:var(--danger); background:var(--danger-wash)}
+.arch{margin-top:14px}
+.arch > summary{font-size:10.5px; font-weight:600; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3);
+  cursor:pointer; padding:4px 6px; list-style:none}
+.arch > summary::-webkit-details-marker{display:none}
+.arch > summary::before{content:"▸ "; display:inline-block; transition:transform .12s}
+.arch[open] > summary::before{transform:rotate(90deg)}
+.arch .grp > header b{color:var(--ink-3); font-weight:500; text-transform:none; letter-spacing:0}
+.vide{font-size:11.5px; color:var(--ink-3); font-style:italic; padding:6px}
+
+.menu{position:absolute; z-index:60; background:var(--surface); border:1px solid var(--line); border-radius:5px;
+  box-shadow:var(--shadow); padding:4px; min-width:210px}
+.menu button{display:block; width:100%; text-align:left; border:0; background:none; cursor:pointer;
+  padding:6px 9px; border-radius:4px; font-size:12.5px; color:var(--ink)}
+.menu button:hover{background:var(--primary-wash)}
+.menu button small{display:block; font-size:10.5px; color:var(--ink-3)}
+
+/* ============================ sections ============================ */
+.step{
+  background:var(--surface); border:1px solid var(--line-soft); border-radius:var(--radius);
+  margin-bottom:14px; box-shadow:var(--shadow); overflow:hidden;
+}
+.step > header{
+  display:flex; align-items:baseline; gap:10px; padding:9px 14px;
+  border-bottom:1px solid var(--line-soft); background:var(--surface-2);
+}
+.step-n{
+  font-family:"IBM Plex Mono",monospace; font-size:10.5px; font-weight:600; color:var(--brass);
+  border:1px solid var(--field-line); background:var(--brass-wash);
+  border-radius:3px; padding:1px 5px; flex:none; align-self:center;
+}
+.step h2{font-size:14.5px}
+.step .art{margin-left:auto; font-size:11px; color:var(--ink-3); letter-spacing:.02em; white-space:nowrap}
+.step .body{padding:12px 14px}
+
+.grid{display:grid; gap:10px 14px}
+.f{display:flex; flex-direction:column; gap:3px; min-width:0}
+.f > label{font-size:10.5px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-3)}
+.f .hint{font-size:10.5px; color:var(--ink-3); font-style:italic}
+input[type=text],input[type=number],select,textarea{
+  width:100%; padding:5px 7px; border:1px solid var(--field-line); border-radius:4px;
+  background:var(--field); font-size:13px;
+}
+input[type=number]{font-variant-numeric:tabular-nums; text-align:right}
+select{cursor:pointer; padding-right:4px}
+input:hover,select:hover{border-color:var(--brass)}
+
+/* ============================ tables ============================ */
+.tw{overflow-x:auto; margin:0 -14px; padding:0 14px}
+table{border-collapse:collapse; width:100%; font-size:12.5px}
+th{
+  font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--ink-3); text-align:left; padding:4px 4px; border-bottom:1px solid var(--line);
+  white-space:nowrap; vertical-align:bottom;
+}
+th.r,td.r{text-align:right}
+th.c,td.c{text-align:center}
+td{padding:2px 4px; border-bottom:1px solid var(--line-soft); vertical-align:middle}
+tbody tr:hover{background:var(--surface-2)}
+td.calc{font-variant-numeric:tabular-nums; color:var(--ink-2); white-space:nowrap}
+td.calc b{color:var(--ink); font-weight:600}
+td.na{color:var(--ink-3)}
+.rowcat{width:1%}
+.rowcat select{min-width:104px; font-size:11.5px}
+td input[type=text]{min-width:92px}
+td input[type=number]{width:62px}
+td select{min-width:58px; font-size:12px}
+tfoot td{border-top:1px solid var(--line); border-bottom:0; padding-top:6px; font-weight:600; font-variant-numeric:tabular-nums}
+.del{color:var(--ink-3); border:0; background:none; cursor:pointer; padding:2px 5px; border-radius:3px; line-height:1}
+.del:hover{color:var(--danger); background:var(--danger-wash)}
+.addrow{display:flex; gap:6px; flex-wrap:wrap; margin-top:9px}
+
+/* équipements */
+.rub{border:1px solid var(--line-soft); border-radius:4px; margin-bottom:5px; background:var(--surface)}
+.rub > summary{
+  display:flex; align-items:center; gap:9px; padding:6px 10px; cursor:pointer; list-style:none;
+  font-size:12.5px; font-weight:500;
+}
+.rub > summary::-webkit-details-marker{display:none}
+.rub > summary::before{content:"›"; color:var(--ink-3); font-size:15px; transition:transform .12s; display:inline-block}
+.rub[open] > summary::before{transform:rotate(90deg)}
+.rub > summary .sum{margin-left:auto; font-variant-numeric:tabular-nums; font-size:11.5px; color:var(--ink-3)}
+.rub > summary .sum.on{color:var(--brass); font-weight:600}
+.rub .inner{padding:0 10px 8px; border-top:1px solid var(--line-soft)}
+.note{font-size:11px; color:var(--ink-3); font-style:italic; margin:6px 0 0}
+
+/* coefficient d'entretien */
+.ent{display:grid; grid-template-columns:auto minmax(0,1fr) 54px; gap:5px 10px; align-items:center}
+.ent .k{font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--ink-3); white-space:nowrap}
+.ent .v{text-align:right; font-variant-numeric:tabular-nums; font-size:12.5px}
+.ent .tot{border-top:1px solid var(--line); padding-top:6px; font-weight:600}
+
+/* ============================ résultat ============================ */
+.res{background:var(--surface); border:1px solid var(--line-soft); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; margin-bottom:12px}
+.res .head{padding:12px 14px 10px; background:linear-gradient(180deg,var(--primary-wash),transparent)}
+.res .head > span{font-size:10.5px; font-weight:600; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3)}
+.big{font-family:Spectral,Georgia,serif; font-size:40px; font-weight:600; line-height:1.05; color:var(--primary); font-variant-numeric:tabular-nums; margin-top:2px}
+.big i{font-style:normal; font-size:17px; color:var(--ink-3); margin-left:3px}
+.chain{padding:4px 14px 12px}
+.chain .l{display:flex; align-items:baseline; gap:8px; padding:3.5px 0; border-bottom:1px dotted var(--line-soft); font-size:12px}
+.chain .l:last-child{border-bottom:0}
+.chain .l span{color:var(--ink-2); min-width:0}
+.chain .l em{font-style:normal; font-size:10px; color:var(--ink-3); font-family:"IBM Plex Mono",monospace; flex:none}
+.chain .l b{margin-left:auto; font-variant-numeric:tabular-nums; font-weight:600; white-space:nowrap; flex:none}
+.chain .l.op b{color:var(--brass); font-weight:500}
+.chain .l.tot{border-top:1px solid var(--line); margin-top:4px; padding-top:6px}
+.chain .l.tot b{color:var(--primary)}
+
+.cards{display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:10px 14px 13px; border-top:1px solid var(--line-soft)}
+.card{background:var(--surface-2); border-radius:4px; padding:7px 9px}
+.card span{display:block; font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3)}
+.card b{font-size:17px; font-variant-numeric:tabular-nums; font-weight:600}
+.card small{font-size:10.5px; color:var(--ink-3); display:block; line-height:1.3}
+
+.alerts{display:flex; flex-direction:column; gap:5px}
+.al{display:flex; gap:7px; padding:6px 9px; border-radius:4px; font-size:11.5px; line-height:1.4; border:1px solid transparent}
+.al b{flex:none; font-family:"IBM Plex Mono",monospace; font-size:10px; padding-top:1px}
+.al--warn{background:var(--warn-wash); color:var(--warn); border-color:color-mix(in srgb,var(--warn) 22%,transparent)}
+.al--info{background:var(--primary-wash); color:var(--primary); border-color:color-mix(in srgb,var(--primary) 18%,transparent)}
+.al--ok{background:var(--ok-wash); color:var(--ok); border-color:color-mix(in srgb,var(--ok) 20%,transparent)}
+
+.legal{font-size:10.5px; color:var(--ink-3); line-height:1.45; margin-top:12px; padding-top:10px; border-top:1px solid var(--line-soft)}
+.legal a{color:var(--primary)}
+
+/* ============================ import IFC ============================ */
+.modal{position:fixed; inset:0; z-index:80; display:flex; align-items:center; justify-content:center;
+  background:rgba(13,21,28,.55); padding:24px}
+.modal[hidden]{display:none}
+.modal-in{background:var(--surface); border:1px solid var(--line); border-radius:6px; box-shadow:0 24px 64px -20px rgba(0,0,0,.5);
+  width:min(860px,100%); max-height:88vh; display:flex; flex-direction:column; overflow:hidden}
+.modal-in > header{display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--line-soft); background:var(--surface-2)}
+.modal-in > header h2{font-size:15px}
+.modal-in > header .btn{margin-left:auto}
+.modal-body{padding:16px; overflow-y:auto}
+
+.drop{border:2px dashed var(--line); border-radius:6px; padding:34px 20px; text-align:center; background:var(--surface-2);
+  transition:border-color .12s, background .12s; cursor:pointer}
+.drop:hover,.drop.over{border-color:var(--brass); background:var(--brass-wash)}
+.drop b{display:block; font-size:14px; margin-bottom:4px}
+.drop span{font-size:12px; color:var(--ink-3)}
+
+.prog{height:6px; background:var(--surface-2); border-radius:3px; overflow:hidden; margin:14px 0 6px}
+.prog i{display:block; height:100%; background:var(--brass); width:0; transition:width .2s}
+.prog-txt{font-size:12px; color:var(--ink-2); font-variant-numeric:tabular-nums}
+
+.rz{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-bottom:14px}
+.rz div{background:var(--surface-2); border-radius:4px; padding:8px 10px}
+.rz span{display:block; font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3)}
+.rz b{font-size:17px; font-variant-numeric:tabular-nums}
+.maptbl td:first-child{font-family:"IBM Plex Mono",monospace; font-size:11.5px}
+.lgt{display:flex; align-items:center; gap:9px; padding:5px 8px; border-bottom:1px solid var(--line-soft); font-size:12.5px}
+.lgt:hover{background:var(--surface-2)}
+.lgt input{width:auto; margin:0}
+.lgt b{font-weight:600; min-width:190px}
+.lgt small{color:var(--ink-3); font-variant-numeric:tabular-nums}
+.lgt em{margin-left:auto; font-style:normal; color:var(--ink-3); font-size:11.5px}
+
+/* ============================ impression ============================ */
+#print{display:none}
+@media print{
+  @page{size:A4 portrait; margin:12mm 11mm}
+  body{background:#fff; color:#000; font-size:9.5pt}
+  .topbar,.rail,.sheet,.noprint{display:none !important}
+  .app{display:block; max-width:none}
+  #print{display:block}
+  #print h1{font-size:15pt; margin-bottom:2mm}
+  #print h2{font-size:10.5pt; margin:5mm 0 1.5mm; padding-bottom:.8mm; border-bottom:.4pt solid #000}
+  #print table{width:100%; border-collapse:collapse; font-size:8.5pt}
+  #print th,#print td{border:.4pt solid #999; padding:1mm 1.4mm}
+  #print th{background:#eee; text-transform:none; font-size:8pt; letter-spacing:0; color:#000}
+  #print .meta{display:grid; grid-template-columns:1fr 1fr; gap:0 6mm; font-size:9pt; margin-bottom:3mm}
+  #print .meta div{border-bottom:.4pt dotted #999; padding:.8mm 0}
+  #print .meta b{font-weight:600}
+  #print .fin{margin-top:3mm; padding:2mm 3mm; border:1pt solid #000; display:flex; justify-content:space-between; font-size:11pt; font-weight:600}
+  #print .foot{margin-top:4mm; font-size:7.5pt; color:#444; line-height:1.35}
+  #print tfoot td{font-weight:700; background:#f4f4f4}
+  #print .r{text-align:right}
+  #print .c{text-align:center}
+  tr{break-inside:avoid}
+  .pg{break-before:page}
+  #print .cover{margin-bottom:6mm}
+  #print .cover h1{font-size:17pt}
+  #print .cover .sub{font-size:10pt; color:#333; margin-bottom:3mm}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <h1>Décompte de surface corrigée</h1>
+    <span>décret n° 48-1766</span>
+  </div>
+  <div class="sync" id="sync" data-state="ok"><i class="dot"></i><span id="syncTxt">Enregistré</span></div>
+  <button class="btn" id="bNew">Nouveau</button>
+  <button class="btn" id="bDup">Dupliquer</button>
+  <button class="btn" id="bSave">Enregistrer</button>
+  <button class="btn" id="bPrint">Imprimer ▾</button>
+  <button class="btn" id="bTheme" title="Basculer le thème">Thème</button>
+</header>
+
+<div class="app">
+  <aside class="rail rail--left noprint">
+    <h2>Décomptes</h2>
+    <div class="doclist" id="docs"></div>
+    <button class="btn btn--sm" id="bIfc" style="margin:10px 0 0;width:100%;justify-content:center">
+      Importer une maquette IFC</button>
+    <div class="legal">
+      Les décomptes sont conservés dans ce navigateur, sur ce poste. Pour les transporter
+      ailleurs ou les archiver, exportez la sauvegarde et réimportez-la sur l’autre poste.
+      <br><br>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px">
+        <button class="btn btn--sm" id="bExport">Exporter</button>
+        <button class="btn btn--sm" id="bImport">Importer</button>
+      </div>
+      <input type="file" id="fImport" accept="application/json,.json" hidden>
+    </div>
+  </aside>
+
+  <main class="sheet">
+
+    <section class="step">
+      <header><i class="step-n">1</i><h2>Identification du local</h2><span class="art">art. 2 à 4</span></header>
+      <div class="body">
+        <div class="grid" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+          <div class="f" style="grid-column:span 2"><label for="i_adresse">Adresse</label><input type="text" id="i_adresse" data-k="adresse"></div>
+          <div class="f"><label for="i_ville">Code postal – Ville</label><input type="text" id="i_ville" data-k="ville"></div>
+          <div class="f"><label for="i_batiment">Bâtiment</label><input type="text" id="i_batiment" data-k="batiment">
+            <span class="hint">sert au regroupement, à l’impression et à l’archivage</span></div>
+          <div class="f"><label for="i_ref">Référence convention / bail</label><input type="text" id="i_ref" data-k="ref"></div>
+          <div class="f"><label for="i_logement">N° de logement</label><input type="text" id="i_logement" data-k="logement"></div>
+          <div class="f"><label for="i_typo">Typologie</label><input type="text" id="i_typo" data-k="typologie" placeholder="T3"></div>
+          <div class="f"><label for="i_date">Date du décompte</label><input type="text" id="i_date" data-k="date"></div>
+          <div class="f"><label for="i_imm">Nature de l’immeuble</label>
+            <select id="i_imm" data-k="immeuble"><option value="collectif">Immeuble collectif</option><option value="individuel">Maison individuelle</option></select></div>
+          <div class="f"><label for="i_etage">Étage du local</label><input type="number" id="i_etage" data-k="etage" min="0" max="30" step="1" placeholder="0">
+            <span class="hint">l’entresol compte pour un étage</span></div>
+          <div class="f"><label for="i_asc">Desservi par un ascenseur</label>
+            <select id="i_asc" data-k="ascenseur"><option value="">— à renseigner —</option><option value="oui">Oui</option><option value="non">Non</option></select></div>
+          <div class="f"><label for="i_neuf">Achèvement de l’immeuble</label>
+            <select id="i_neuf" data-k="neuf"><option value="non">Depuis plus de 10 ans</option><option value="oui">Depuis moins de 10 ans</option></select>
+            <span class="hint">abattement art. 12</span></div>
+          <div class="f"><label for="i_prix">Prix de base (€/m²/an)</label><input type="number" id="i_prix" data-k="prix" min="0" step="0.01"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="step">
+      <header><i class="step-n">2</i><h2>Pièces et annexes</h2><span class="art">art. 5 à 10</span></header>
+      <div class="body">
+        <div class="tw">
+          <table id="tPieces">
+            <thead><tr>
+              <th>Nature</th><th>Désignation</th>
+              <th class="r">Surface<br>mesurée</th>
+              <th class="r">Réelle<br>art. 5</th>
+              <th class="c">Coef.<br>art. 6</th>
+              <th class="r">Surface<br>utile</th>
+              <th class="c">Éclair.<br>art. 8</th>
+              <th class="c">Ensol.<br>art. 9</th>
+              <th class="c">Vues<br>art. 10</th>
+              <th class="r">Coef.<br>art. 7</th>
+              <th class="r">Surface<br>corrigée</th>
+              <th></th>
+            </tr></thead>
+            <tbody id="bPieces"></tbody>
+            <tfoot><tr>
+              <td colspan="2">Total</td>
+              <td class="r" id="fMes">—</td><td class="r" id="fRee">—</td><td></td>
+              <td class="r" id="fUti">—</td><td colspan="4"></td>
+              <td class="r" id="fSC">—</td><td></td>
+            </tr></tfoot>
+          </table>
+        </div>
+        <div class="addrow">
+          <button class="btn btn--sm" data-add="hab">+ Pièce habitable</button>
+          <button class="btn btn--sm" data-add="sec">+ Pièce secondaire</button>
+          <button class="btn btn--sm" data-add="sdb">+ Salle d’eau</button>
+          <button class="btn btn--sm" data-add="wc">+ W.-C.</button>
+          <button class="btn btn--sm" data-add="ann">+ Annexe intérieure</button>
+          <button class="btn btn--sm" data-add="ext">+ Balcon / loggia</button>
+          <button class="btn btn--sm" data-add="cave">+ Cave / grenier</button>
+        </div>
+        <p class="note">Art. 7, dernier alinéa : pour les annexes, la surface corrigée est égale à la surface utile — les
+          coefficients d’éclairement, d’ensoleillement et de vues ne s’y appliquent pas. Les caves et greniers n’entrent pas
+          dans ce tableau : ils sont comptés par équivalence à l’étape 4.</p>
+      </div>
+    </section>
+
+    <section class="step">
+      <header><i class="step-n">3</i><h2>Correctif d’ensemble</h2><span class="art">art. 11 à 13</span></header>
+      <div class="body">
+        <div class="grid" style="grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)">
+          <div>
+            <h3 style="font-family:'IBM Plex Sans';font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:7px">
+              Coefficient d’entretien — annexe III</h3>
+            <div class="ent" id="ent"></div>
+          </div>
+          <div>
+            <h3 style="font-family:'IBM Plex Sans';font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:7px">
+              Emplacement et vérifications</h3>
+            <div class="grid" style="gap:9px">
+              <div class="f"><label for="i_emp">Coefficient d’emplacement (art. 13)</label>
+                <select id="i_emp" data-k="emplacement">
+                  <option value="1.1">1,10 — avantages notoires</option>
+                  <option value="1">1,00 — emplacement neutre</option>
+                  <option value="0.9">0,90</option>
+                  <option value="0.8">0,80</option>
+                  <option value="0.7">0,70 — inconvénients notoires</option>
+                </select>
+                <span class="hint">art. 17-2° : le préfet peut le majorer de 0,1 (0,1 ou 0,2 en agglomération parisienne)</span></div>
+              <div class="f"><label for="i_prec">Coefficient d’entretien précédemment appliqué</label>
+                <input type="number" id="i_prec" data-k="coefPrec" step="0.01" min="0" placeholder="facultatif">
+                <span class="hint">art. 12 : un nouveau coefficient n’est applicable que s’il dépasse le précédent d’au moins 0,15</span></div>
+              <div id="seuilBox"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="step">
+      <header><i class="step-n">4</i><h2>Éléments d’équipement</h2><span class="art">art. 14</span></header>
+      <div class="body">
+        <div id="equip"></div>
+        <div class="grid" style="grid-template-columns:minmax(0,1fr) 150px; align-items:end; margin-top:10px">
+          <div class="f"><label for="i_fc">Réduction pour installations réalisées à frais communs (art. 14 in fine)</label>
+            <span class="hint">à saisir en m², valeur négative — les équivalences sont réduites proportionnellement à la participation de chacun</span></div>
+          <input type="number" id="i_fc" data-k="fraisCommuns" step="0.01" max="0" placeholder="0,00">
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <aside class="rail rail--right noprint">
+    <div class="res">
+      <div class="head">
+        <span>Surface corrigée du local</span>
+        <div class="big"><span id="rBig">0,00</span><i>m²</i></div>
+      </div>
+      <div class="chain" id="chain"></div>
+      <div class="cards">
+        <div class="card"><span>Surface habitable</span><b id="rShab">0,00</b> <small>art. R.111-2 CCH</small></div>
+        <div class="card"><span>Surface utile</span><b id="rSu">0,00</b> <small>habitable + ½ annexes</small></div>
+      </div>
+    </div>
+    <h3 style="margin-bottom:7px">Contrôles</h3>
+    <div class="alerts" id="alerts"></div>
+    <div class="legal">
+      Décret n° 48-1766 du 22 novembre 1948 fixant les conditions de détermination de la surface corrigée
+      des locaux d’habitation ou à usage professionnel.<br><br>
+      <b>Depuis le 15 janvier 2026</b> (décret n° 2026-12), seule la surface utile permet d’établir une convention
+      APL, y compris pour conventionner des logements en cours d’exploitation. La surface corrigée reste la base
+      des conventions non encore renouvelées et des baux relevant de la loi du 1<sup>er</sup> septembre 1948.
+    </div>
+  </aside>
+</div>
+
+<div class="modal noprint" id="ifcModal" hidden>
+  <div class="modal-in">
+    <header><h2>Importer une maquette IFC</h2>
+      <button class="btn btn--ghost" id="ifcClose" aria-label="Fermer">✕</button></header>
+    <div class="modal-body" id="ifcBody"></div>
+  </div>
+</div>
+<input type="file" id="ifcFile" accept=".ifc,.IFC" hidden>
+
+<div id="print"></div>
+
+<script>
+"use strict";
+
+/* ======================= barèmes du décret ======================= */
+const TYPES = {
+  hab : {lab:"Pièce habitable",              short:"Habitable",  art:"art. 2",  coef:1,   pieces:true,  shab:true,  annexe:false, cap:null, sc:true},
+  sec : {lab:"Pièce secondaire",             short:"Secondaire", art:"art. 3",  coef:0.9, pieces:true,  shab:true,  annexe:false, cap:null, sc:true},
+  sdb : {lab:"Salle de bains / d’eau",       short:"Sanitaire",  art:"art. 4",  coef:1,   pieces:false, shab:true,  annexe:false, cap:null, sc:true},
+  wc  : {lab:"W.-C.",                        short:"W.-C.",      art:"art. 4",  coef:1,   pieces:false, shab:true,  annexe:false, cap:2,    sc:true},
+  ann : {lab:"Annexe intérieure",            short:"Annexe",     art:"art. 4",  coef:0.6, pieces:false, shab:true,  annexe:false, cap:null, sc:true},
+  ext : {lab:"Balcon, loggia, séchoir",      short:"Annexe ext.",art:"art. 4",  coef:0.6, pieces:false, shab:false, annexe:true,  cap:null, sc:true},
+  cave: {lab:"Cave, grenier, sous-sol",      short:"Cave",       art:"art. 14", coef:0,   pieces:false, shab:false, annexe:true,  cap:null, sc:false},
+};
+const ECL  = [1, .9, .8, .7, .6];
+const ENS  = [1.1, 1, .9, .8, .7, .6];
+const VUES = [1.3, 1.1, 1, .9, .8];
+
+const ENTRETIEN = [
+  {k:"I",   lab:"Gros œuvre", opts:[["Immeuble délabré",.30],["État médiocre",.40],["État satisfaisant",.50],["Construction en bon état",.60]]},
+  {k:"II",  lab:"Couvertures et terrasses", opts:[["Défaut d’étanchéité généralisé",.05],["Petits défauts localisés",.10],["Étanche, entretien moyen — collectif",.35],["Étanche, entretien moyen — individuel",.50]]},
+  {k:"III", lab:"Ravalement", opts:[["Façades délabrées",0],["Façades non entretenues",.10],["Bon état, non ravalées depuis + de 20 ans",.20],["Bon état, ravalées depuis – de 20 ans",.35],["Refaites depuis – de 20 ans — collectif",.50],["Refaites depuis – de 20 ans — individuel",.55]]},
+  {k:"IV",  lab:"Menuiseries extérieures", opts:[["Étanchéité nulle",0],["Jeu excessif",.05],["Étanchéité satisfaisante, peintures + de 10 ans",.10],["Bon état, peintures – de 10 ans",.30]]},
+  {k:"V",   lab:"Parties communes", opts:[["Mauvais état",0],["État médiocre",.05],["Bon état",.15],["Très bon état",.25],["État parfait",.30]]},
+  {k:"VI",  lab:"Entretien courant", opts:[["Non assuré",0],["Insuffisant",.05],["Services assurés",.10],["Très bon aspect permanent",.20]]},
+  {k:"VI b",lab:"Espaces verts entretenus", opts:[["Sans objet",0],["Espaces verts entretenus",.05]]},
+  {k:"VII", lab:"Ascenseur", opts:[["Pas d’ascenseur / sans objet",0],["Local au 2e ou 3e étage",.05],["Local au 4e étage et au-dessus",.10]]},
+];
+const ENT_DEFAUT = [2,2,3,2,2,2,0,0];
+
+const EQUIP = [
+  {g:"Postes d’eau froide et de vidange", items:[
+    ["eauCommun",     "Poste d’eau commun à l’étage ou au demi-étage",           0.25],
+    ["vidCommun",     "Poste de vidange commun à l’étage ou au demi-étage",      0.25],
+    ["p1vid",         "1er poste intérieur — vidange seule",                     2],
+    ["p1eau",         "1er poste intérieur — eau seule",                         1.5],
+    ["p1eauvid",      "1er poste intérieur — eau avec vidange (évier)",          3.5],
+    ["p2vid",         "Poste supplémentaire — vidange",                          0.25],
+    ["p2eau",         "Poste supplémentaire — eau",                              0.25],
+    ["p2eauvid",      "Poste supplémentaire — eau avec vidange",                 0.5],
+    ["p3vid",         "Poste en sus — vidange",                                  0.2],
+    ["p3eau",         "Poste en sus — eau",                                      0.2],
+    ["p3eauvid",      "Poste en sus — eau avec vidange",                         0.4],
+  ]},
+  {g:"Appareils sanitaires", items:[
+    ["baignoire",     "Baignoire",                                               4],
+    ["receveur",      "Receveur de douches ou bac à laver",                      2],
+    ["lavabo",        "Lavabo ou autre appareil sanitaire",                      1],
+  ]},
+  {g:"Eau chaude", excl:["ec1","ec1sans"], items:[
+    ["ec1",           "1er poste sur baignoire, receveur de douches ou bac à laver", 6],
+    ["ec1sans",       "1er poste en l’absence de baignoire, receveur ou bac",    3],
+    ["ec2",           "Poste supplémentaire — unique ou 1er poste d’une pièce",  1],
+    ["ec3",           "Poste en sus du premier dans une même pièce",             0.5],
+  ]},
+  {g:"W.-C.", excl:["wcCommun","wcSans","wcAvec","wcEgout"], items:[
+    ["wcCommun",      "Communs à l’étage ou au demi-étage",                      0.5],
+    ["wcSans",        "Particuliers, sans effet d’eau",                          2],
+    ["wcAvec",        "Particuliers, avec effet d’eau",                          4],
+    ["wcEgout",       "Raccordés au réseau d’égout, effet d’eau et siphon",      6],
+  ]},
+  {g:"Électricité et gaz", excl:["elec","elecTh"], items:[
+    ["elec",          "Installation permettant l’éclairage normal",              1.5],
+    ["elecTh",        "Éclairage et appareils thermiques",                       2.5],
+    ["gaz",           "Gaz",                                                     1.5],
+  ]},
+  {g:"Chauffage central", excl:["chCol","chInd"], items:[
+    ["chCol",         "Installation commune (collectif)",                        3],
+    ["chInd",         "Installation particulière (individuel)",                  2.5],
+  ]},
+  {g:"Vide-ordures", excl:["voPart","voCommun"], items:[
+    ["voPart",        "Vide-ordures particulier au local",                       4],
+    ["voCommun",      "Vide-ordures commun à l’étage",                           2],
+  ]},
+  {g:"Ascenseur et monte-charge", items:[
+    ["monte",         "Monte-charge desservant le local",                        2],
+    ["asc1",          "Ascenseur — installation desservant le local (dès le 2e étage)", 6],
+    ["asc2",          "Ascenseur — chaque installation en sus (dès le 2e étage)",4],
+  ]},
+  {g:"Caves et greniers", excl:["cave10","caveP10","bas3","bas10","basP10"], items:[
+    ["cave10",        "Caves louées avec le local — de 2 à 10 m²",               1],
+    ["caveP10",       "Caves louées avec le local — plus de 10 m²",              2],
+    ["bas3",          "Parties de moins de 1,90 m et greniers — de 1 à 3 m²",    0.5],
+    ["bas10",         "Parties de moins de 1,90 m et greniers — de 3 à 10 m²",   1.5],
+    ["basP10",        "Parties de moins de 1,90 m et greniers — plus de 10 m²",  3],
+  ]},
+];
+const EQ_INDEX = {};
+EQUIP.forEach(g => g.items.forEach(([k,l,v]) => EQ_INDEX[k] = {lab:l, val:v, groupe:g.g}));
+
+/* ======================= utilitaires ======================= */
+const r2 = n => Math.round((n + Number.EPSILON) * 100) / 100;
+const arr5 = n => Math.max(0, Math.ceil(Math.round((n - 0.5) * 1e6) / 1e6));
+const fm = (n, d = 2) => (n == null || isNaN(n) ? "—" : n.toLocaleString("fr-FR", {minimumFractionDigits:d, maximumFractionDigits:d}));
+const num = v => { const n = parseFloat(String(v).replace(",", ".")); return isFinite(n) ? n : 0; };
+const uid = () => "d" + Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+
+function blankRow(type){
+  const t = TYPES[type];
+  return {id:uid(), type, nom:"", s:null, coef:t.coef, ecl:1, ens:1, vues:1};
+}
+function blankDoc(){
+  return {
+    id:uid(), updatedAt:Date.now(), archive:false, archiveLe:null,
+    adresse:"", ville:"", batiment:"", logement:"", typologie:"", ref:"",
+    date:new Date().toLocaleDateString("fr-FR"),
+    immeuble:"collectif", etage:null, ascenseur:"", neuf:"non",
+    emplacement:1, coefPrec:null, prix:null, fraisCommuns:null,
+    ent:ENT_DEFAUT.slice(),
+    rows:[blankRow("hab"), blankRow("hab"), blankRow("sec"), blankRow("sdb"), blankRow("wc"), blankRow("ann")],
+    eq:{},
+  };
+}
+
+/* ======================= moteur de calcul ======================= */
+function compute(d){
+  const lignes = d.rows.map(row => {
+    const t = TYPES[row.type];
+    const mes = num(row.s);
+    let reelle = arr5(mes);
+    if (t.cap != null) reelle = Math.min(t.cap, reelle);
+    const coef = row.coef != null ? num(row.coef) : t.coef;
+    const utile = t.sc ? r2(reelle * coef) : 0;
+    const coefMoy = t.pieces ? r2((num(row.ecl) + num(row.ens) + num(row.vues)) / 3) : 1;
+    const sc = t.sc ? r2(utile * coefMoy) : 0;
+    return {row, t, mes, reelle, coef, utile, coefMoy, sc};
+  });
+
+  const totMes    = r2(lignes.reduce((a, l) => a + l.mes, 0));
+  const totReelle = lignes.reduce((a, l) => a + (l.t.sc ? l.reelle : 0), 0);
+  const totUtile  = r2(lignes.reduce((a, l) => a + l.utile, 0));
+  const totSC     = r2(lignes.reduce((a, l) => a + l.sc, 0));
+
+  const shab = r2(lignes.filter(l => l.t.shab).reduce((a, l) => a + l.mes, 0));
+  const annx = r2(lignes.filter(l => l.t.annexe).reduce((a, l) => a + l.mes, 0));
+  const su   = r2(shab + annx / 2);
+
+  let coefEnt = r2(ENTRETIEN.reduce((a, r, i) => a + r.opts[d.ent[i] ?? 0][1], 0));
+  const abat = d.neuf === "oui" ? (d.immeuble === "individuel" ? 0.25 : 0.5) : 0;
+  coefEnt = r2(coefEnt - abat);
+
+  const coefEmp = num(d.emplacement) || 1;
+  const coefMoyen = r2((coefEnt + coefEmp) / 2);
+  const scApres = r2(totSC * coefMoyen);
+
+  const eqLignes = Object.entries(d.eq || {})
+    .filter(([k, q]) => EQ_INDEX[k] && num(q) > 0)
+    .map(([k, q]) => ({k, q:num(q), val:EQ_INDEX[k].val, lab:EQ_INDEX[k].lab, groupe:EQ_INDEX[k].groupe, tot:r2(EQ_INDEX[k].val * num(q))}));
+  const fc = Math.min(0, num(d.fraisCommuns));
+  const equip = r2(eqLignes.reduce((a, l) => a + l.tot, 0) + fc);
+
+  const scLocal = r2(scApres + equip);
+  const etage = d.etage == null || d.etage === "" ? null : num(d.etage);
+  let taux = 0;
+  if (d.ascenseur === "non" && etage != null) taux = etage >= 6 ? .15 : etage === 5 ? .10 : etage === 4 ? .05 : 0;
+  const reduc = r2(scLocal * taux);
+  const scFinal = r2(scLocal - reduc);
+
+  const prix = num(d.prix);
+  const loyerAn = prix > 0 ? r2(scFinal * prix) : null;
+  const loyerMois = loyerAn != null ? r2(loyerAn / 12) : null;
+
+  return {lignes, totMes, totReelle, totUtile, totSC, shab, annx, su,
+          coefEnt, abat, coefEmp, coefMoyen, scApres, eqLignes, equip, fc,
+          scLocal, taux, reduc, scFinal, loyerAn, loyerMois, etage};
+}
+
+function controles(d, c){
+  const out = [];
+  const W = (t, m) => out.push({lvl:"warn", tag:t, msg:m});
+  const I = (t, m) => out.push({lvl:"info", tag:t, msg:m});
+
+  c.lignes.forEach(l => {
+    const n = l.row.nom || l.t.lab;
+    if (l.t.pieces){
+      if (num(l.row.ecl) < .6 || num(l.row.ecl) > 1) W("art. 8", `« ${n} » : éclairement hors de la fourchette 0,60 – 1,00.`);
+      if (num(l.row.ens) < .6 || num(l.row.ens) > 1.1) W("art. 9", `« ${n} » : ensoleillement hors de la fourchette 0,60 – 1,10.`);
+      if (num(l.row.vues) > 1.1) I("art. 10", `« ${n} » : un coefficient de vues supérieur à 1,10 n’est admis que pour les locaux classés hors catégorie.`);
+      if (num(l.row.vues) < .8) W("art. 10", `« ${n} » : vues hors de la fourchette 0,80 – 1,10.`);
+      if (/cuisin/i.test(n) && num(l.row.ens) > 1) W("art. 9", `« ${n} » : en aucun cas les cuisines ne peuvent recevoir un coefficient d’ensoleillement supérieur à 1.`);
+    }
+    if (l.t === TYPES.hab && l.mes > 0 && l.mes < 9) W("art. 2", `« ${n} » : moins de 9 m², une pièce habitable ne peut être retenue comme telle.`);
+    if (l.t === TYPES.sec && l.mes > 0 && l.mes < 7) W("art. 3", `« ${n} » : moins de 7 m², le classement en pièce secondaire est à vérifier.`);
+    if (l.t === TYPES.wc && l.mes > 2.5) I("art. 6", `« ${n} » : surface plafonnée à 2 m² pour le calcul.`);
+  });
+
+  EQUIP.filter(g => g.excl).forEach(g => {
+    const on = g.excl.filter(k => num((d.eq || {})[k]) > 0);
+    if (on.length > 1) W("art. 14", `${g.g} : ${on.length} lignes exclusives sont cochées simultanément (${on.map(k => EQ_INDEX[k].lab).join(" ; ")}).`);
+  });
+  if (num((d.eq || {}).ec1) > 1) W("art. 14", "Eau chaude : l’équivalence de 6 m² ne vaut que pour le premier poste du local. Les postes suivants valent 1 m² ou 0,50 m².");
+  if ((d.ascenseur === "" || d.ascenseur == null) || d.etage == null || d.etage === "")
+    I("art. 16", "Étage ou desserte par ascenseur non renseignés : aucune réduction n’est appliquée.");
+  if (c.coefEmp < .7 || c.coefEmp > 1.1) W("art. 13", "Le coefficient d’emplacement doit rester entre 0,70 et 1,10, sauf majoration préfectorale.");
+  const prec = num(d.coefPrec);
+  if (prec > 0 && c.coefEnt - prec < .15)
+    W("art. 12", `Le nouveau coefficient d’entretien (${fm(c.coefEnt)}) ne dépasse pas de 0,15 le précédent (${fm(prec)}) : il n’est pas applicable.`);
+  const aCave = d.rows.some(r => r.type === "cave" && num(r.s) > 0);
+  const eqCave = ["cave10", "caveP10", "bas3", "bas10", "basP10"].some(k => num((d.eq || {})[k]) > 0);
+  if (aCave && !eqCave) I("art. 14", "Une cave ou un grenier est saisi à l’étape 2 sans équivalence correspondante à l’étape 4.");
+  if (num(d.prix) <= 0) I("loyer", "Prix de base au m² non renseigné : le loyer n’est pas calculé.");
+  return out;
+}
+
+/* ======================= état ======================= */
+let DOCS = [];
+let cur = null;
+let dirty = false, publishing = false, lastPublished = "";
+let saveTimer = null, pubTimer = null;
+const LS = "sc48.docs.v1";
+
+function sortDocs(){ DOCS.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)); }
+const batOf = d => (d.batiment || d.adresse || "(sans bâtiment)").trim() || "(sans bâtiment)";
+function groupes(list){
+  const m = new Map();
+  list.forEach(d => { const b = batOf(d); if (!m.has(b)) m.set(b, []); m.get(b).push(d); });
+  return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0], "fr"));
+}
+
+function mergeDocs(a, b){
+  const m = new Map();
+  [...a, ...b].forEach(d => {
+    if (!d || !d.id) return;
+    const p = m.get(d.id);
+    if (!p || (d.updatedAt || 0) > (p.updatedAt || 0)) m.set(d.id, d);
+  });
+  return [...m.values()];
+}
+
+async function boot(){
+  let local = [];
+  try { local = JSON.parse(localStorage.getItem(LS) || "[]") || []; } catch (e) {}
+  DOCS = mergeDocs(local, []);
+  DOCS.forEach(d => {
+    if (d.archive === undefined) d.archive = false;
+    if (!d.batiment) d.batiment = d.adresse || "";
+  });
+  if (!DOCS.length) DOCS = [blankDoc()];
+  sortDocs();
+  cur = DOCS[0];
+  buildEntretien(); buildEquip();
+  renderAll();
+  setSync("ok", "Enregistré sur ce poste");
+}
+
+function touch(){
+  cur.updatedAt = Date.now();
+  dirty = true;
+  setSync("dirty", "Modifications en attente");
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    saveLocal();
+    dirty = false;
+    setSync(stored ? "ok" : "error", stored ? "Enregistré sur ce poste" : "Enregistrement local indisponible");
+  }, 400);
+}
+let stored = true;
+function saveLocal(){
+  try { localStorage.setItem(LS, JSON.stringify(DOCS)); stored = true; }
+  catch (e) { stored = false; }
+}
+async function publishData(){
+  saveLocal();
+  dirty = false;
+  setSync(stored ? "ok" : "error", stored ? "Enregistré sur ce poste" : "Enregistrement local indisponible");
+}
+function setSync(state, txt){
+  const el = document.getElementById("sync");
+  el.dataset.state = state;
+  document.getElementById("syncTxt").textContent = txt;
+}
+window.addEventListener("beforeunload", saveLocal);
+
+/* ======================= construction des blocs ======================= */
+function buildEntretien(){
+  const box = document.getElementById("ent");
+  box.innerHTML = ENTRETIEN.map((r, i) => `
+    <span class="k">${esc(r.k)}</span>
+    <select data-ent="${i}" aria-label="${esc(r.lab)}">
+      ${r.opts.map((o, j) => `<option value="${j}">${esc(r.lab)} — ${esc(o[0])}</option>`).join("")}
+    </select>
+    <span class="v" id="entv${i}">0,00</span>`).join("")
+    + `<span class="k tot">—</span><span class="tot">Coefficient d’entretien retenu (art. 12)</span><span class="v tot" id="entTot">0,00</span>
+       <span class="k">—</span><span id="abatLab" style="color:var(--ink-3);font-size:11.5px"></span><span class="v" id="abatVal" style="color:var(--ink-3)"></span>`;
+  box.querySelectorAll("select[data-ent]").forEach(s => s.addEventListener("change", e => {
+    cur.ent[+e.target.dataset.ent] = +e.target.value; touch(); renderComputed();
+  }));
+}
+
+function buildEquip(){
+  const box = document.getElementById("equip");
+  box.innerHTML = EQUIP.map(g => `
+    <details class="rub" data-g="${esc(g.g)}">
+      <summary><span>${esc(g.g)}</span><span class="sum" data-sum="${esc(g.g)}">—</span></summary>
+      <div class="inner"><table><tbody>
+        ${g.items.map(([k, lab, val]) => `
+          <tr>
+            <td>${esc(lab)}</td>
+            <td class="r calc" style="width:66px">${fm(val)} m²</td>
+            <td class="c" style="width:88px"><input type="number" min="0" step="1" data-eq="${k}" aria-label="${esc(lab)} — nombre"></td>
+            <td class="r calc" style="width:78px" data-eqt="${k}">—</td>
+          </tr>`).join("")}
+      </tbody></table></div>
+    </details>`).join("");
+  box.querySelectorAll("input[data-eq]").forEach(inp => inp.addEventListener("input", e => {
+    const k = e.target.dataset.eq, v = e.target.value;
+    if (v === "" || num(v) <= 0) delete cur.eq[k]; else cur.eq[k] = num(v);
+    touch(); renderComputed();
+  }));
+}
+
+/* ======================= rendu ======================= */
+function renderAll(){ renderDocs(); renderIdent(); renderRows(); renderComputed(); }
+
+function renderDocs(){
+  const box = document.getElementById("docs");
+  const actifs = DOCS.filter(d => !d.archive), archives = DOCS.filter(d => d.archive);
+  const gA = groupes(actifs), gR = groupes(archives);
+
+  const ligne = d => {
+    const c = compute(d);
+    const t = [d.logement, d.typologie].filter(Boolean).join(" · ");
+    return `<button class="doc" data-id="${d.id}" aria-current="${d === cur}">
+      <span class="sup" data-sup="${d.id}" role="button" title="Supprimer ce décompte">✕</span>
+      <em>${fm(c.scFinal)}</em>
+      <b>${esc(d.logement || d.adresse || "Nouveau décompte")}</b>
+      <small>${esc(t || d.ville || "—")}</small></button>`;
+  };
+  const groupe = (bat, ds, i, arch) => {
+    const tot = r2(ds.reduce((a, d) => a + compute(d).scFinal, 0));
+    return `<div class="grp"><header>
+        <b title="${esc(bat)}">${esc(bat)}</b>
+        <span>${ds.length} · ${fm(tot)} m²</span>
+        <button class="ico" data-pbat="${i}" data-arch-src="${arch ? 1 : 0}" title="Imprimer tout le bâtiment">⎙</button>
+        <button class="ico" data-${arch ? "res" : "arc"}="${i}" title="${arch ? "Restaurer" : "Archiver"} le bâtiment">${arch ? "↩" : "▤"}</button>
+        <button class="ico ico--del" data-dbat="${i}" data-arch-src="${arch ? 1 : 0}" title="Supprimer le bâtiment">✕</button>
+      </header>${ds.map(ligne).join("")}</div>`;
+  };
+
+  box.innerHTML = (gA.length ? gA.map(([b, ds], i) => groupe(b, ds, i, false)).join("")
+                             : `<p class="vide">Aucun décompte actif.</p>`)
+    + (gR.length ? `<details class="arch"><summary>Archives — ${archives.length} décompte(s)</summary>
+        ${gR.map(([b, ds], i) => groupe(b, ds, i, true)).join("")}</details>` : "");
+
+  const G = { 0: gA, 1: gR };
+  box.querySelectorAll(".doc").forEach(b => b.addEventListener("click", e => {
+    if (e.target.dataset.sup) return;
+    saveLocal(); cur = DOCS.find(x => x.id === b.dataset.id); renderAll();
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }));
+  box.querySelectorAll("[data-sup]").forEach(x => x.addEventListener("click", e => {
+    e.stopPropagation();
+    const d = DOCS.find(y => y.id === x.dataset.sup);
+    if (!d || !confirm(`Supprimer le décompte « ${d.logement || d.adresse || "sans nom"} » ? Cette action est définitive.`)) return;
+    DOCS = DOCS.filter(y => y.id !== d.id);
+    if (cur === d) cur = DOCS[0] || blankDoc();
+    if (!DOCS.length) DOCS = [cur];
+    touch(); renderAll();
+  }));
+  box.querySelectorAll("[data-arc]").forEach(x => x.addEventListener("click", () => {
+    const ds = gA[+x.dataset.arc][1];
+    ds.forEach(d => { d.archive = true; d.archiveLe = new Date().toISOString().slice(0, 10); });
+    if (cur.archive) cur = DOCS.find(d => !d.archive) || DOCS[0];
+    touch(); renderAll();
+    setSync("dirty", ds.length + " décompte(s) archivé(s)");
+  }));
+  box.querySelectorAll("[data-res]").forEach(x => x.addEventListener("click", () => {
+    const ds = gR[+x.dataset.res][1];
+    ds.forEach(d => { d.archive = false; d.archiveLe = null; });
+    touch(); renderAll();
+  }));
+  box.querySelectorAll("[data-dbat]").forEach(x => x.addEventListener("click", () => {
+    const [bat, ds] = G[+x.dataset.archSrc][+x.dataset.dbat];
+    if (!confirm(`Supprimer les ${ds.length} décomptes du bâtiment « ${bat} » ? Cette action est définitive.`)) return;
+    const ids = new Set(ds.map(d => d.id));
+    DOCS = DOCS.filter(d => !ids.has(d.id));
+    if (!DOCS.length) DOCS = [blankDoc()];
+    if (ids.has(cur.id)) cur = DOCS[0];
+    touch(); renderAll();
+  }));
+  box.querySelectorAll("[data-pbat]").forEach(x => x.addEventListener("click", () => {
+    const [bat, ds] = G[+x.dataset.archSrc][+x.dataset.pbat];
+    imprimerBatiment(bat, ds);
+  }));
+}
+
+function renderIdent(){
+  document.querySelectorAll("[data-k]").forEach(el => {
+    const v = cur[el.dataset.k];
+    el.value = v == null ? "" : v;
+  });
+}
+document.querySelectorAll("[data-k]").forEach(el => {
+  const ev = el.tagName === "SELECT" ? "change" : "input";
+  el.addEventListener(ev, () => {
+    const k = el.dataset.k;
+    cur[k] = el.type === "number" ? (el.value === "" ? null : num(el.value)) : el.value;
+    touch();
+    if (["adresse", "logement", "typologie", "ville"].includes(k)) renderDocs();
+    renderComputed();
+  });
+});
+
+function renderRows(){
+  const tb = document.getElementById("bPieces");
+  tb.innerHTML = cur.rows.map(row => {
+    const t = TYPES[row.type];
+    const sel = (name, list, val) => `<select data-f="${name}" ${t.pieces ? "" : "disabled"}>${
+      list.map(v => `<option value="${v}" ${v === num(val) ? "selected" : ""}>${fm(v)}</option>`).join("")}</select>`;
+    const coefCell = row.type === "ann" || row.type === "ext"
+      ? `<select data-f="coef"><option value="0.6" ${num(row.coef) === .6 ? "selected" : ""}>0,60</option><option value="1" ${num(row.coef) === 1 ? "selected" : ""}>1,00</option></select>`
+      : `<span class="calc">${t.sc ? fm(t.coef) : "—"}</span>`;
+    return `<tr data-id="${row.id}">
+      <td class="rowcat"><select data-f="type">${Object.entries(TYPES).map(([k, v]) =>
+        `<option value="${k}" ${k === row.type ? "selected" : ""}>${esc(v.lab)}</option>`).join("")}</select></td>
+      <td><input type="text" data-f="nom" value="${esc(row.nom)}" placeholder="${esc(t.lab)}"></td>
+      <td class="r"><input type="number" data-f="s" step="0.01" min="0" value="${row.s == null ? "" : row.s}"></td>
+      <td class="r calc" data-c="reelle">—</td>
+      <td class="c">${coefCell}</td>
+      <td class="r calc" data-c="utile">—</td>
+      <td class="c">${t.pieces ? sel("ecl", ECL, row.ecl) : `<span class="na">—</span>`}</td>
+      <td class="c">${t.pieces ? sel("ens", ENS, row.ens) : `<span class="na">—</span>`}</td>
+      <td class="c">${t.pieces ? sel("vues", VUES, row.vues) : `<span class="na">—</span>`}</td>
+      <td class="r calc" data-c="coefMoy">—</td>
+      <td class="r calc" data-c="sc">—</td>
+      <td><button class="del" data-del aria-label="Supprimer la ligne">✕</button></td>
+    </tr>`;
+  }).join("");
+
+  tb.querySelectorAll("tr").forEach(tr => {
+    const row = cur.rows.find(r => r.id === tr.dataset.id);
+    tr.querySelectorAll("[data-f]").forEach(el => {
+      const ev = el.tagName === "SELECT" ? "change" : "input";
+      el.addEventListener(ev, () => {
+        const f = el.dataset.f;
+        if (f === "type"){ row.type = el.value; row.coef = TYPES[el.value].coef; touch(); renderRows(); renderComputed(); return; }
+        if (f === "nom") row.nom = el.value;
+        else if (f === "s") row.s = el.value === "" ? null : num(el.value);
+        else row[f] = num(el.value);
+        touch(); renderComputed();
+      });
+    });
+    tr.querySelector("[data-del]").addEventListener("click", () => {
+      cur.rows = cur.rows.filter(r => r.id !== row.id); touch(); renderRows(); renderComputed();
+    });
+  });
+}
+
+document.querySelectorAll("[data-add]").forEach(b => b.addEventListener("click", () => {
+  cur.rows.push(blankRow(b.dataset.add)); touch(); renderRows(); renderComputed();
+  const last = document.querySelector("#bPieces tr:last-child input[data-f='nom']");
+  if (last) last.focus();
+}));
+
+function renderComputed(){
+  const c = compute(cur);
+
+  document.querySelectorAll("#bPieces tr").forEach(tr => {
+    const l = c.lignes.find(x => x.row.id === tr.dataset.id);
+    if (!l) return;
+    const put = (k, v) => { const el = tr.querySelector(`[data-c="${k}"]`); if (el) el.innerHTML = v; };
+    const has = l.mes > 0;
+    put("reelle", l.t.sc ? (has ? fm(l.reelle, 0) : "—") : `<span class="na">art. 14</span>`);
+    put("utile", l.t.sc && has ? fm(l.utile) : "—");
+    put("coefMoy", l.t.sc && has ? fm(l.coefMoy) : "—");
+    put("sc", l.t.sc && has ? `<b>${fm(l.sc)}</b>` : "—");
+  });
+  document.getElementById("fMes").textContent = fm(c.totMes);
+  document.getElementById("fRee").textContent = fm(c.totReelle, 0);
+  document.getElementById("fUti").textContent = fm(c.totUtile);
+  document.getElementById("fSC").textContent = fm(c.totSC);
+
+  ENTRETIEN.forEach((r, i) => {
+    const s = document.querySelector(`select[data-ent="${i}"]`);
+    if (s) s.value = cur.ent[i] ?? 0;
+    document.getElementById("entv" + i).textContent = fm(r.opts[cur.ent[i] ?? 0][1]);
+  });
+  document.getElementById("entTot").textContent = fm(c.coefEnt);
+  document.getElementById("abatLab").textContent = c.abat
+    ? `dont abattement ${cur.immeuble === "individuel" ? "maison individuelle" : "immeuble collectif"} de moins de 10 ans`
+    : "";
+  document.getElementById("abatVal").textContent = c.abat ? "− " + fm(c.abat) : "";
+
+  const prec = num(cur.coefPrec);
+  document.getElementById("seuilBox").innerHTML = prec > 0
+    ? `<div class="al ${c.coefEnt - prec >= .15 ? "al--ok" : "al--warn"}"><b>art. 12</b><span>${
+        c.coefEnt - prec >= .15
+          ? `Écart de ${fm(c.coefEnt - prec)} : le nouveau coefficient est applicable.`
+          : `Écart de ${fm(c.coefEnt - prec)} : inférieur à 0,15, le nouveau coefficient n’est pas applicable.`}</span></div>`
+    : "";
+
+  EQUIP.forEach(g => {
+    let s = 0;
+    g.items.forEach(([k, , val]) => {
+      const q = num((cur.eq || {})[k]);
+      const inp = document.querySelector(`input[data-eq="${k}"]`);
+      if (inp && document.activeElement !== inp) inp.value = q > 0 ? q : "";
+      const cell = document.querySelector(`[data-eqt="${k}"]`);
+      if (cell) cell.innerHTML = q > 0 ? `<b>${fm(r2(val * q))}</b>` : "—";
+      s += q > 0 ? r2(val * q) : 0;
+    });
+    const sum = document.querySelector(`[data-sum="${CSS.escape(g.g)}"]`);
+    if (sum){ sum.textContent = s > 0 ? fm(r2(s)) + " m²" : "—"; sum.classList.toggle("on", s > 0); }
+  });
+
+  document.getElementById("rBig").textContent = fm(c.scFinal);
+  document.getElementById("rShab").textContent = fm(c.shab);
+  document.getElementById("rSu").textContent = fm(c.su);
+
+  const L = (lab, art, val, cls = "") => `<div class="l ${cls}"><span>${lab}</span><em>${art}</em><b>${val}</b></div>`;
+  document.getElementById("chain").innerHTML =
+    L("Surfaces corrigées des pièces et annexes", "art. 5-10", fm(c.totSC) + " m²") +
+    L("Coefficient d’entretien", "art. 12", fm(c.coefEnt), "op") +
+    L("Coefficient d’emplacement", "art. 13", fm(c.coefEmp), "op") +
+    L("Correctif d’ensemble (moyenne)", "art. 11", "× " + fm(c.coefMoyen), "op") +
+    L("Après correctif d’ensemble", "art. 11", fm(c.scApres) + " m²") +
+    L("Équivalences des équipements", "art. 14", "+ " + fm(c.equip) + " m²", "op") +
+    L("Surface corrigée du local", "art. 11", fm(c.scLocal) + " m²") +
+    (c.taux > 0 ? L("Absence d’ascenseur", "art. 16", "− " + fm(c.reduc) + " m² (" + Math.round(c.taux * 100) + " %)", "op") : "") +
+    L("Surface corrigée à retenir", "art. 19", fm(c.scFinal) + " m²", "tot") +
+    (c.loyerAn != null
+      ? L("Loyer annuel hors charges", "", fm(c.loyerAn) + " €") + L("Loyer mensuel hors charges", "", fm(c.loyerMois) + " €", "tot")
+      : "");
+
+  const al = controles(cur, c);
+  document.getElementById("alerts").innerHTML = al.length
+    ? al.map(a => `<div class="al al--${a.lvl}"><b>${esc(a.tag)}</b><span>${esc(a.msg)}</span></div>`).join("")
+    : `<div class="al al--ok"><b>✓</b><span>Aucune anomalie détectée sur les bornes et exclusivités du décret.</span></div>`;
+
+  const doc = document.querySelector(`.doc[data-id="${cur.id}"] em`);
+  if (doc) doc.textContent = fm(c.scFinal);
+  if (!PRINT_BAT) buildPrint(c);
+}
+
+/* ======================= impression ======================= */
+function buildPrint(c){ document.getElementById("print").innerHTML = printDoc(cur, c); }
+
+function imprimerBatiment(bat, ds){
+  const cs = ds.map(d => [d, compute(d)]);
+  const tot = r2(cs.reduce((a, [, c]) => a + c.scFinal, 0));
+  const shab = r2(cs.reduce((a, [, c]) => a + c.shab, 0));
+  const su = r2(cs.reduce((a, [, c]) => a + c.su, 0));
+  const cover = `
+    <div class="cover">
+      <h1>Décomptes de surface corrigée — ${esc(bat)}</h1>
+      <div class="sub">Décret n° 48-1766 du 22 novembre 1948 · ${ds.length} logement(s) ·
+        établi le ${new Date().toLocaleDateString("fr-FR")}</div>
+      <table><thead><tr>
+        <th>Logement</th><th>Typologie</th><th class="c">Étage</th><th class="r">SC pièces</th>
+        <th class="c">Correctif</th><th class="r">Équip. art. 14</th><th class="r">Réduction art. 16</th>
+        <th class="r">Surface corrigée</th><th class="r">Habitable</th><th class="r">Utile</th></tr></thead>
+      <tbody>${cs.map(([d, c]) => `<tr>
+        <td>${esc(d.logement || "—")}</td><td>${esc(d.typologie || "")}</td>
+        <td class="c">${d.etage == null ? "—" : d.etage}</td>
+        <td class="r">${fm(c.totSC)}</td><td class="c">${fm(c.coefMoyen)}</td>
+        <td class="r">${fm(c.equip)}</td><td class="r">${c.reduc ? "− " + fm(c.reduc) : "—"}</td>
+        <td class="r"><b>${fm(c.scFinal)}</b></td><td class="r">${fm(c.shab)}</td><td class="r">${fm(c.su)}</td>
+      </tr>`).join("")}</tbody>
+      <tfoot><tr><td colspan="7">Total du bâtiment</td><td class="r">${fm(tot)}</td>
+        <td class="r">${fm(shab)}</td><td class="r">${fm(su)}</td></tr></tfoot></table>
+    </div>`;
+  document.getElementById("print").innerHTML =
+    cover + cs.map(([d, c], i) => `<div class="${i === 0 ? "pg" : "pg"}">${printDoc(d, c)}</div>`).join("");
+  PRINT_BAT = true;
+  window.print();
+  setTimeout(() => { PRINT_BAT = false; if (cur) buildPrint(compute(cur)); }, 1200);
+}
+let PRINT_BAT = false;
+
+function printDoc(d, c){
+  const meta = [
+    ["Bâtiment", batOf(d)], ["Adresse", d.adresse], ["Code postal – Ville", d.ville],
+    ["N° de logement", d.logement], ["Typologie", d.typologie],
+    ["Étage", d.etage == null ? "" : d.etage], ["Ascenseur", d.ascenseur === "oui" ? "Oui" : d.ascenseur === "non" ? "Non" : ""],
+    ["Référence convention / bail", d.ref], ["Date du décompte", d.date],
+  ];
+  const rows = c.lignes.filter(l => l.mes > 0);
+  return `
+    <h1>Décompte de la surface corrigée et du prix du loyer</h1>
+    <div style="font-size:8.5pt;margin-bottom:3mm">Décret n° 48-1766 du 22 novembre 1948 — loi du 1<sup>er</sup> septembre 1948, art. 28 à 36.</div>
+    <div class="meta">${meta.map(([k, v]) => `<div>${esc(k)} : <b>${esc(v || "—")}</b></div>`).join("")}</div>
+
+    <h2>1. Pièces et annexes (art. 5 à 10)</h2>
+    <table><thead><tr>
+      <th>Nature</th><th>Désignation</th><th class="r">Mesurée</th><th class="r">Réelle</th>
+      <th class="c">Art. 6</th><th class="r">Utile</th><th class="c">Écl.</th><th class="c">Ens.</th>
+      <th class="c">Vues</th><th class="r">Art. 7</th><th class="r">Corrigée</th></tr></thead>
+    <tbody>${rows.map(l => `<tr>
+      <td>${esc(l.t.short)}</td><td>${esc(l.row.nom || l.t.lab)}</td>
+      <td class="r">${fm(l.mes)}</td>
+      <td class="r">${l.t.sc ? fm(l.reelle, 0) : "—"}</td>
+      <td class="c">${l.t.sc ? fm(l.coef) : "—"}</td>
+      <td class="r">${l.t.sc ? fm(l.utile) : "—"}</td>
+      <td class="c">${l.t.pieces ? fm(l.row.ecl) : "—"}</td>
+      <td class="c">${l.t.pieces ? fm(l.row.ens) : "—"}</td>
+      <td class="c">${l.t.pieces ? fm(l.row.vues) : "—"}</td>
+      <td class="r">${l.t.sc ? fm(l.coefMoy) : "—"}</td>
+      <td class="r">${l.t.sc ? fm(l.sc) : "—"}</td></tr>`).join("")}</tbody>
+    <tfoot><tr><td colspan="2">Total</td><td class="r">${fm(c.totMes)}</td><td class="r">${fm(c.totReelle, 0)}</td>
+      <td></td><td class="r">${fm(c.totUtile)}</td><td colspan="4"></td><td class="r">${fm(c.totSC)}</td></tr></tfoot></table>
+
+    <h2>2. Correctif d’ensemble (art. 11 à 13)</h2>
+    <table><tbody>
+      ${ENTRETIEN.map((r, i) => `<tr><td>${esc(r.k)} — ${esc(r.lab)}</td><td>${esc(r.opts[d.ent[i] ?? 0][0])}</td>
+        <td class="r" style="width:20mm">${fm(r.opts[d.ent[i] ?? 0][1])}</td></tr>`).join("")}
+      ${c.abat ? `<tr><td colspan="2">Abattement — achèvement depuis moins de 10 ans (art. 12)</td><td class="r">− ${fm(c.abat)}</td></tr>` : ""}
+      <tr><td colspan="2"><b>Coefficient d’entretien (art. 12)</b></td><td class="r"><b>${fm(c.coefEnt)}</b></td></tr>
+      <tr><td colspan="2">Coefficient d’emplacement et de voisinage (art. 13)</td><td class="r">${fm(c.coefEmp)}</td></tr>
+      <tr><td colspan="2"><b>Coefficient moyen du correctif d’ensemble (art. 11)</b></td><td class="r"><b>${fm(c.coefMoyen)}</b></td></tr>
+    </tbody></table>
+
+    <h2>3. Éléments d’équipement (art. 14)</h2>
+    ${c.eqLignes.length ? `<table><thead><tr><th>Rubrique</th><th>Désignation</th><th class="c">Unitaire</th><th class="c">Nombre</th><th class="r">Total</th></tr></thead>
+      <tbody>${c.eqLignes.map(l => `<tr><td>${esc(l.groupe)}</td><td>${esc(l.lab)}</td>
+        <td class="c">${fm(l.val)}</td><td class="c">${l.q}</td><td class="r">${fm(l.tot)}</td></tr>`).join("")}
+      ${c.fc < 0 ? `<tr><td colspan="4">Réduction pour installations à frais communs (art. 14 in fine)</td><td class="r">${fm(c.fc)}</td></tr>` : ""}</tbody>
+      <tfoot><tr><td colspan="4">Total des équivalences</td><td class="r">${fm(c.equip)}</td></tr></tfoot></table>`
+      : `<div style="font-size:8.5pt">Aucun élément d’équipement retenu.</div>`}
+
+    <h2>4. Surface corrigée du local</h2>
+    <table><tbody>
+      <tr><td>Surfaces corrigées des pièces et annexes</td><td class="r" style="width:28mm">${fm(c.totSC)} m²</td></tr>
+      <tr><td>× coefficient moyen du correctif d’ensemble (art. 11)</td><td class="r">${fm(c.coefMoyen)}</td></tr>
+      <tr><td>= surface corrigée après correctif d’ensemble</td><td class="r">${fm(c.scApres)} m²</td></tr>
+      <tr><td>+ équivalences superficielles des équipements (art. 14)</td><td class="r">${fm(c.equip)} m²</td></tr>
+      <tr><td><b>= surface corrigée du local</b></td><td class="r"><b>${fm(c.scLocal)} m²</b></td></tr>
+      ${c.taux > 0 ? `<tr><td>− réduction pour absence d’ascenseur, ${Math.round(c.taux * 100)} % (art. 16)</td><td class="r">− ${fm(c.reduc)} m²</td></tr>` : ""}
+    </tbody></table>
+    <div class="fin"><span>Surface corrigée à retenir</span><span>${fm(c.scFinal)} m²</span></div>
+    ${c.loyerAn != null ? `<div class="fin" style="border-top:0"><span>Loyer hors charges — ${fm(num(d.prix))} €/m²/an</span>
+      <span>${fm(c.loyerAn)} € / an &nbsp;·&nbsp; ${fm(c.loyerMois)} € / mois</span></div>` : ""}
+
+    <div class="foot">
+      Surface habitable (art. R.111-2 CCH) : ${fm(c.shab)} m² — annexes privatives : ${fm(c.annx)} m² —
+      <b>surface utile : ${fm(c.su)} m²</b>. Rappel : depuis le décret n° 2026-12 du 12 janvier 2026, seule la surface utile
+      permet d’établir une convention APL.<br>
+      Art. 19 du décret : chacune des opérations est conduite jusqu’à la deuxième décimale.
+      Art. 5 : la surface réelle de chaque pièce est arrondie au m² le plus proche, la demi-unité à l’unité inférieure.
+    </div>`;
+}
+
+/* =====================================================================
+   Import de maquettes IFC — lecture ISO-10303-21 en flux, sans dépendance
+   ===================================================================== */
+
+const IFC_KEEP = new Set(['IFCPROJECT', 'IFCSITE', 'IFCBUILDING', 'IFCBUILDINGSTOREY', 'IFCSPACE',
+  'IFCZONE', 'IFCRELAGGREGATES', 'IFCRELCONTAINEDINSPATIALSTRUCTURE', 'IFCRELASSIGNSTOGROUP',
+  'IFCRELDEFINESBYPROPERTIES', 'IFCPROPERTYSET', 'IFCPROPERTYSINGLEVALUE', 'IFCELEMENTQUANTITY',
+  'IFCQUANTITYAREA', 'IFCQUANTITYLENGTH', 'IFCSANITARYTERMINAL', 'IFCTRANSPORTELEMENT']);
+
+/* codes de classification des espaces — convention BIMer, complétée par les libellés */
+const IFC_CODES = {
+  SEJ:'hab', SAM:'hab', CUI:'hab', CH1:'hab', CH2:'hab', CH3:'hab', CH4:'hab', CH5:'hab', BUR:'hab',
+  SDB:'sdb', SDE:'sdb', SDD:'sdb', WC:'wc', WC1:'wc', WC2:'wc',
+  CEL:'ann', RAN:'ann', PEND:'ann', PLA:'ann', PLT:'ann', DEG:'ann', HAL:'ann', ENT:'ann', BUA:'ann',
+  BAL:'ext', LOG:'ext', TER:'ext', SEC:'ext', CAV:'cave', GRE:'cave',
+  GTE:'exclu', GT:'exclu', CES:'exclu', CAS:'exclu', CIR:'exclu', CI1:'exclu', CI2:'exclu',
+  CI3:'exclu', CI4:'exclu', TOI:'exclu', LOC:'exclu', ORD:'exclu', VEL:'exclu',
+};
+const IFC_MOTS = [
+  [/s[ée]jour|salon|living|salle a manger/, 'hab'], [/chambre/, 'hab'], [/cuisine/, 'hab'], [/bureau/, 'hab'],
+  [/salle.?de.?bain|salle.?d.?eau|douche|bains/, 'sdb'], [/\bw\.?-?c\.?\b|toilette|sanitaire/, 'wc'],
+  [/balcon|loggia|terrasse|s[ée]choir|v[ée]randa/, 'ext'], [/\bcave\b|grenier|comble|sous.?sol/, 'cave'],
+  [/d[ée]gagement|couloir|\bhall\b|entr[ée]e|placard|rangement|cellier|penderie|buanderie|dressing/, 'ann'],
+  [/gaine|escalier|ascenseur|circulation|palier|local|commun|toit|technique|ordure|v[ée]lo/, 'exclu'],
+];
+const IFC_PROPS = {
+  aire:     ['Surface', 'Area', 'NetFloorArea', 'GrossFloorArea', 'Aire', 'SurfaceNette', 'Surface nette'],
+  hauteur:  ['Hauteur non liée', 'Hauteur', 'Height', 'FinishCeilingHeight', 'Unbounded Height', 'NetHeight'],
+  code:     ['ESP_CL', 'ESP_3D', 'CODE_ESPACE', 'Code espace'],
+  logement: ['Zone', 'Logement', 'LOG_ID', 'Numero logement', 'N° logement'],
+  niveau:   ['Niveau', 'NIV_ID', 'Level', 'Etage', 'Étage'],
+};
+
+/* --- décodage des chaînes IFC (ISO-10303-21) --- */
+function ifcTxt(v) {
+  if (v == null) return '';
+  let t = String(v).replace(/''/g, "'");
+  t = t.replace(/\\X2\\((?:[0-9A-Fa-f]{4})+)\\X0\\/g,
+    (_, h) => h.match(/.{4}/g).map(x => String.fromCharCode(parseInt(x, 16))).join(''));
+  t = t.replace(/\\X\\([0-9A-Fa-f]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
+  t = t.replace(/\\S\\(.)/g, (_, c) => String.fromCharCode(c.charCodeAt(0) + 128));
+  return t.trim();
+}
+const RX_STR = /'((?:[^']|'')*)'/g;
+function ifcStrings(args) {
+  const out = []; let m; RX_STR.lastIndex = 0;
+  while ((m = RX_STR.exec(args))) out.push(ifcTxt(m[1]));
+  return out;
+}
+function ifcRefs(txt) {
+  const out = []; const re = /#(\d+)/g; let m;
+  while ((m = re.exec(txt))) out.push(+m[1]);
+  return out;
+}
+
+/* --- lecture en flux : on ne garde que les enregistrements utiles --- */
+async function ifcLire(file, onProgress) {
+  const CHUNK = 6 << 20;
+  const td = new TextDecoder('utf-8');
+  const ents = new Map();
+  let reste = '', enCours = '', lu = 0;
+
+  const traiter = ligne => {
+    let l = enCours ? enCours + ligne : ligne;
+    if (l.charCodeAt(0) !== 35) { enCours = ''; return; }        // doit commencer par #
+    if (!/;\s*$/.test(l)) { enCours = l.length < 200000 ? l : ''; return; }
+    enCours = '';
+    const eq = l.indexOf('=');
+    if (eq < 1) return;
+    const par = l.indexOf('(', eq);
+    if (par < 0) return;
+    const type = l.slice(eq + 1, par).trim();
+    if (!IFC_KEEP.has(type)) return;
+    ents.set(+l.slice(1, eq), [type, l.slice(par + 1, l.lastIndexOf(')'))]);
+  };
+
+  for (let off = 0; off < file.size; off += CHUNK) {
+    const buf = await file.slice(off, Math.min(off + CHUNK, file.size)).arrayBuffer();
+    const txt = reste + td.decode(buf, { stream: true });
+    const lignes = txt.split('\n');
+    reste = lignes.pop();
+    for (let i = 0; i < lignes.length; i++) traiter(lignes[i]);
+    lu = Math.min(off + CHUNK, file.size);
+    if (onProgress) onProgress(lu / file.size, ents.size);
+    await new Promise(r => setTimeout(r, 0));
+  }
+  traiter(reste);
+  return ents;
+}
+
+/* --- reconstruction du modèle --- */
+function ifcModele(ents) {
+  const val = {};                                   // propriétés simples
+  for (const [id, [t, a]] of ents) {
+    if (t !== 'IFCPROPERTYSINGLEVALUE' && t !== 'IFCQUANTITYAREA' && t !== 'IFCQUANTITYLENGTH') continue;
+    const nom = ifcStrings(a)[0] || '';
+    let v = null;
+    const m = a.match(/IFC[A-Z]*MEASURE\(([^)]*)\)|IFCTEXT\('((?:[^']|'')*)'\)|IFCLABEL\('((?:[^']|'')*)'\)|IFCIDENTIFIER\('((?:[^']|'')*)'\)|IFCINTEGER\((-?\d+)\)|IFCREAL\(([^)]*)\)|IFCBOOLEAN\((\.[TF]\.)\)/);
+    if (m) v = m.slice(1).find(x => x !== undefined);
+    else {                                          // quantités : dernier argument numérique
+      const q = a.match(/,\s*(-?[\d.]+(?:E[-+]?\d+)?)\s*$/i);
+      if (q) v = q[1];
+    }
+    val[id] = [ifcTxt(nom), typeof v === 'string' ? ifcTxt(v) : v];
+  }
+  const psets = {};
+  for (const [id, [t, a]] of ents) {
+    if (t !== 'IFCPROPERTYSET' && t !== 'IFCELEMENTQUANTITY') continue;
+    const i = a.indexOf(',(', a.indexOf(',(') + 1) >= 0 ? a.lastIndexOf(',(') : a.indexOf(',(');
+    const d = {};
+    for (const r of ifcRefs(i >= 0 ? a.slice(i) : '')) if (val[r]) d[val[r][0]] = val[r][1];
+    psets[id] = d;
+  }
+  const props = {};
+  for (const [, [t, a]] of ents) {
+    if (t !== 'IFCRELDEFINESBYPROPERTIES') continue;
+    const m = a.match(/\(([^()]*)\)\s*,\s*#(\d+)\s*$/);
+    if (!m) continue;
+    const src = psets[+m[2]]; if (!src) continue;
+    for (const o of ifcRefs(m[1])) Object.assign(props[o] || (props[o] = {}), src);
+  }
+
+  // zones -> espaces
+  const zoneDe = {};
+  for (const [, [t, a]] of ents) {
+    if (t !== 'IFCRELASSIGNSTOGROUP') continue;
+    const refs = ifcRefs(a);
+    const g = refs[refs.length - 1];
+    const e = ents.get(g);
+    if (!e || e[0] !== 'IFCZONE') continue;
+    const nom = ifcStrings(e[1])[1] || '';
+    const m = a.match(/\(([^()]*)\)/);
+    for (const o of ifcRefs(m ? m[1] : '')) zoneDe[o] = nom;
+  }
+
+  // étage de chaque espace
+  const etageDe = {};
+  for (const [, [t, a]] of ents) {
+    if (t !== 'IFCRELAGGREGATES' && t !== 'IFCRELCONTAINEDINSPATIALSTRUCTURE') continue;
+    const refs = ifcRefs(a);
+    let parent = null, enfants = [];
+    if (t === 'IFCRELAGGREGATES') { parent = refs[refs.length - 1]; enfants = refs.slice(0, -1); }
+    const m = a.match(/\(([^()]*)\)/);
+    if (t === 'IFCRELCONTAINEDINSPATIALSTRUCTURE') { parent = refs[refs.length - 1]; enfants = ifcRefs(m ? m[1] : ''); }
+    else if (m) enfants = ifcRefs(m[1]);
+    const pe = ents.get(parent);
+    if (!pe || pe[0] !== 'IFCBUILDINGSTOREY') continue;
+    for (const c of enfants) etageDe[c] = parent;
+  }
+
+  const prem = (o, cles) => {
+    const p = props[o] || {};
+    for (const c of cles) if (p[c] !== undefined && p[c] !== null && p[c] !== '') return p[c];
+    return null;
+  };
+  const nEtage = txt => {
+    const t = String(txt || '');
+    let m = t.match(/R\s*\+\s*(\d+)/i) || t.match(/niveau\s*(\d+)/i) || t.match(/[ée]tage\s*(\d+)/i);
+    if (m) return +m[1];
+    if (/rdc|rez/i.test(t)) return 0;
+    if (/sous.?sol|\bss\b|infra/i.test(t)) return -1;
+    return null;
+  };
+
+  const batiment = (() => {
+    for (const [, [t, a]] of ents) if (t === 'IFCBUILDING') return ifcStrings(a)[1] || 'Bâtiment';
+    return 'Bâtiment';
+  })();
+  const site = (() => {
+    for (const [, [t, a]] of ents) if (t === 'IFCSITE') return ifcStrings(a)[1] || '';
+    return '';
+  })();
+
+  let ascenseur = false;
+  for (const [, [t]] of ents) if (t === 'IFCTRANSPORTELEMENT') ascenseur = true;
+
+  const pieces = [], codesVus = {};
+  for (const [id, [t, a]] of ents) {
+    if (t !== 'IFCSPACE') continue;
+    const st = ifcStrings(a);
+    const nom = ifcTxt(prem(id, ['Nom']) || st[st.length - 1] || st[1] || '');
+    const code = (prem(id, IFC_PROPS.code) || '').toString().trim().toUpperCase();
+    const aire = parseFloat(prem(id, IFC_PROPS.aire));
+    const haut = parseFloat(prem(id, IFC_PROPS.hauteur));
+    let ref = zoneDe[id] || prem(id, IFC_PROPS.logement) || '';
+    ref = String(ref).replace(/^logement\s*/i, '').replace(/:\d+\s*$/, '').trim();
+    const stId = etageDe[id];
+    const nivTxt = prem(id, IFC_PROPS.niveau) || (stId && ents.get(stId) ? ifcStrings(ents.get(stId)[1])[1] : '');
+    let nat = IFC_CODES[code];
+    if (!nat) {
+      const n = nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      for (const [rx, v] of IFC_MOTS) if (rx.test(n)) { nat = v; break; }
+    }
+    if (!nat) nat = 'ann';
+    if (nat === 'hab') {                       // art. 2 et 3 : le seuil décide, pas le libellé
+      const a = isFinite(aire) ? aire : 0, h = isFinite(haut) ? haut : null;
+      if (a < 7 || (h !== null && h > 0 && h < 2.20)) nat = 'ann';
+      else if (a < 9 || (h !== null && h > 0 && h < 2.50)) nat = 'sec';
+    }
+    if (code === 'CAS' || /cage.?d.?ascenseur|ascenseur/i.test(nom)) ascenseur = true;
+    if (code) (codesVus[code] || (codesVus[code] = { n: 0, nat, ex: nom })).n++;
+    pieces.push({ id, nom, code, nat, aire: isFinite(aire) ? aire : null,
+                  hauteur: isFinite(haut) ? haut : null, ref, niveau: String(nivTxt || ''),
+                  etage: nEtage(nivTxt) });
+  }
+
+  // regroupement par logement
+  const parRef = {};
+  for (const p of pieces) {
+    if (p.nat === 'exclu') continue;
+    if (!p.ref || /^par d[ée]faut$/i.test(p.ref)) continue;
+    (parRef[p.ref] || (parRef[p.ref] = [])).push(p);
+  }
+  const logements = Object.keys(parRef).sort().map(ref => {
+    const ps = parRef[ref];
+    const et = ps.map(p => p.etage).filter(e => e !== null);
+    const nCh = ps.filter(p => /chambre/i.test(p.nom) || /^CH\d/.test(p.code)).length;
+    return { ref, pieces: ps, etage: et.length ? Math.max(...et) : null,
+             niveau: (ps.find(p => p.niveau) || {}).niveau || '',
+             typologie: nCh ? 'T' + (nCh + 1) : '', surface: r2(ps.reduce((a, p) => a + (p.aire || 0), 0)) };
+  });
+  return { batiment, site, ascenseur, logements, pieces, codesVus,
+           horsLogement: pieces.filter(p => p.nat === 'exclu' || !p.ref || /^par d[ée]faut$/i.test(p.ref)).length };
+}
+
+/* --- création des décomptes --- */
+function docDepuisLogement(lg, meta) {
+  const d = blankDoc();
+  d.adresse = meta.batiment || meta.fichier;
+  d.batiment = meta.batiment || meta.fichier;
+  d.ville = meta.site || '';
+  d.logement = lg.ref;
+  d.typologie = lg.typologie;
+  d.etage = lg.etage;
+  d.ascenseur = meta.ascenseur ? 'oui' : 'non';
+  d.ref = 'IFC : ' + meta.fichier;
+  d.rows = lg.pieces.map(p => ({
+    id: uid(), type: p.nat, nom: p.nom, s: p.aire == null ? null : r2(p.aire),
+    coef: TYPES[p.nat].coef, ecl: 1, ens: 1, vues: 1,
+  }));
+  if (!d.rows.length) d.rows = [blankRow('hab')];
+  return d;
+}
+
+/* --- interface --- */
+const ifcModal = document.getElementById('ifcModal');
+const ifcBody = document.getElementById('ifcBody');
+let ifcRes = null, ifcNom = '';
+
+function ifcOuvrir() { ifcModal.hidden = false; ifcEcranDepot(); }
+function ifcFermer() { ifcModal.hidden = true; ifcRes = null; }
+
+function ifcEcranDepot() {
+  ifcBody.innerHTML = `
+    <div class="drop" id="ifcDrop">
+      <b>Déposer un fichier IFC, ou cliquer pour le choisir</b>
+      <span>Les pièces, les surfaces, les étages et le regroupement en logements sont lus
+      directement dans la maquette. Aucun fichier ne quitte ce poste.</span>
+    </div>
+    <p class="note" style="margin-top:12px">La lecture se fait par blocs : un fichier de 100 Mo prend
+    une dizaine de secondes. Seuls les enregistrements utiles au décompte sont conservés en mémoire.</p>`;
+  const dz = document.getElementById('ifcDrop');
+  dz.addEventListener('click', () => document.getElementById('ifcFile').click());
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('over');
+    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) ifcTraiter(f);
+  });
+}
+
+async function ifcTraiter(file) {
+  ifcNom = file.name;
+  ifcBody.innerHTML = `
+    <b style="font-size:13.5px">${esc(file.name)}</b>
+    <div class="prog"><i id="ifcBar"></i></div>
+    <div class="prog-txt" id="ifcTxt">lecture…</div>`;
+  const bar = document.getElementById('ifcBar'), txt = document.getElementById('ifcTxt');
+  const t0 = performance.now();
+  try {
+    const ents = await ifcLire(file, (pct, n) => {
+      bar.style.width = (pct * 100).toFixed(1) + '%';
+      txt.textContent = 'lecture ' + Math.round(pct * 100) + ' %  ·  ' + n.toLocaleString('fr-FR') + ' enregistrements retenus';
+    });
+    txt.textContent = 'analyse du modèle…';
+    await new Promise(r => setTimeout(r, 30));
+    ifcRes = ifcModele(ents);
+    ifcRes.fichier = file.name;
+    ifcRes.duree = ((performance.now() - t0) / 1000).toFixed(1);
+    ifcEcranResultat();
+  } catch (e) {
+    ifcBody.innerHTML = `<div class="al al--warn"><b>!</b><span>Lecture impossible : ${esc(e.message || e)}.
+      Vérifiez qu’il s’agit bien d’un fichier IFC au format texte (ISO-10303-21).</span></div>`;
+  }
+}
+
+function ifcEcranResultat() {
+  const R = ifcRes;
+  const codes = Object.entries(R.codesVus).sort((a, b) => b[1].n - a[1].n);
+  ifcBody.innerHTML = `
+    <div class="rz">
+      <div><span>Bâtiment</span><b style="font-size:13px">${esc(R.batiment)}</b></div>
+      <div><span>Logements</span><b>${R.logements.length}</b></div>
+      <div><span>Pièces retenues</span><b>${R.logements.reduce((a, l) => a + l.pieces.length, 0)}</b></div>
+      <div><span>Ascenseur</span><b style="font-size:14px">${R.ascenseur ? 'oui' : 'non'}</b></div>
+    </div>
+    <p class="note" style="margin:0 0 12px">Lu en ${R.duree} s. ${R.horsLogement} espaces écartés :
+    parties communes, gaines et circulations.</p>
+
+    <h3 style="font-family:'IBM Plex Sans';font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin:0 0 7px">
+      Correspondance des codes d’espace</h3>
+    <p class="note" style="margin:0 0 7px">Une pièce principale est ensuite classée habitable ou secondaire
+    selon les seuils des articles 2 et 3 : 9 m² et 2,50 m, ou 7 m² et 2,20 m.</p>
+    <div class="tw" style="margin:0 0 14px"><table class="maptbl"><thead><tr>
+      <th>Code</th><th>Exemple de libellé</th><th class="c">Pièces</th><th>Nature retenue</th></tr></thead><tbody>
+      ${codes.map(([c, v]) => `<tr><td>${esc(c)}</td><td>${esc(v.ex)}</td><td class="c">${v.n}</td>
+        <td><select data-code="${esc(c)}">${Object.entries(TYPES).map(([k, t]) =>
+          `<option value="${k}" ${k === v.nat ? 'selected' : ''}>${esc(t.lab)}</option>`).join('')}
+          <option value="exclu" ${v.nat === 'exclu' ? 'selected' : ''}>— écarter —</option></select></td></tr>`).join('')}
+    </tbody></table></div>
+
+    <h3 style="font-family:'IBM Plex Sans';font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin:0 0 7px">
+      Logements détectés</h3>
+    <div style="max-height:220px;overflow-y:auto;border:1px solid var(--line-soft);border-radius:4px">
+      ${R.logements.map((l, i) => `<label class="lgt"><input type="checkbox" data-lgt="${i}" checked>
+        <b>${esc(l.ref)}</b><small>${l.pieces.length} pièces · ${fm(l.surface)} m²</small>
+        <em>${esc(l.niveau || '')} ${l.etage != null ? '· étage ' + l.etage : ''} ${esc(l.typologie)}</em></label>`).join('')}
+    </div>
+    <label class="lgt" style="border:0;padding:10px 0 4px">
+      <input type="checkbox" id="ifcArch" ${DOCS.some(d => !d.archive && d.rows.some(r => r.s)) ? 'checked' : ''}>
+      <b style="min-width:0">Archiver les décomptes actifs avant l’import</b>
+      <em>ils restent consultables et imprimables dans les archives</em></label>
+    <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
+      <button class="btn btn--primary" id="ifcGo">Créer les décomptes</button>
+      <button class="btn" id="ifcAnnuler">Annuler</button>
+      <span class="note" style="margin:0">Les coefficients d’entretien, d’emplacement, d’éclairement,
+      d’ensoleillement et de vues restent à saisir : une maquette ne les porte pas.</span>
+    </div>`;
+
+  ifcBody.querySelectorAll('select[data-code]').forEach(sel => sel.addEventListener('change', () => {
+    const c = sel.dataset.code, v = sel.value;
+    R.codesVus[c].nat = v;
+    R.pieces.forEach(p => { if (p.code === c) p.nat = v; });
+    R.logements.forEach(l => { l.pieces = l.pieces.filter(p => p.nat !== 'exclu'); });
+  }));
+  document.getElementById('ifcAnnuler').addEventListener('click', ifcFermer);
+  document.getElementById('ifcGo').addEventListener('click', () => {
+    const choix = [...ifcBody.querySelectorAll('input[data-lgt]')].filter(c => c.checked).map(c => +c.dataset.lgt);
+    if (!choix.length) return;
+    const meta = { batiment: R.batiment, site: R.site, ascenseur: R.ascenseur, fichier: R.fichier };
+    const nouveaux = choix.map(i => docDepuisLogement(R.logements[i], meta));
+    const arc = document.getElementById('ifcArch');
+    let nArch = 0;
+    if (arc && arc.checked) {
+      const auj = new Date().toISOString().slice(0, 10);
+      DOCS.forEach(d => { if (!d.archive) { d.archive = true; d.archiveLe = auj; nArch++; } });
+    }
+    DOCS = nouveaux.concat(DOCS);
+    cur = nouveaux[0];
+    touch(); renderAll(); ifcFermer();
+    setSync('dirty', nouveaux.length + ' décompte(s) importé(s)' + (nArch ? ' · ' + nArch + ' archivé(s)' : ''));
+  });
+}
+
+document.getElementById('bIfc').addEventListener('click', ifcOuvrir);
+document.getElementById('ifcClose').addEventListener('click', ifcFermer);
+document.getElementById('ifcFile').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (f) ifcTraiter(f);
+});
+ifcModal.addEventListener('click', e => { if (e.target === ifcModal) ifcFermer(); });
+
+/* ======================= actions ======================= */
+document.getElementById("bNew").addEventListener("click", () => {
+  cur = blankDoc(); DOCS.unshift(cur); touch(); renderAll(); document.getElementById("i_adresse").focus();
+});
+document.getElementById("bDup").addEventListener("click", () => {
+  const copy = JSON.parse(JSON.stringify(cur));
+  copy.id = uid(); copy.updatedAt = Date.now();
+  copy.adresse = (copy.adresse || "Décompte") + " (copie)";
+  copy.rows.forEach(r => r.id = uid());
+  cur = copy; DOCS.unshift(copy); touch(); renderAll();
+});
+document.getElementById("bSave").addEventListener("click", () => { saveLocal(); clearTimeout(pubTimer); publishData(true); });
+document.getElementById("bPrint").addEventListener("click", e => {
+  document.querySelectorAll(".menu").forEach(m => m.remove());
+  const bat = batOf(cur);
+  const freres = DOCS.filter(d => batOf(d) === bat && !!d.archive === !!cur.archive);
+  const m = document.createElement("div");
+  m.className = "menu noprint";
+  m.innerHTML = `
+    <button data-un>Ce logement<small>${esc(cur.logement || cur.adresse || "décompte courant")}</small></button>
+    <button data-tout>Tout le bâtiment<small>${esc(bat)} — ${freres.length} logement(s)</small></button>`;
+  document.body.appendChild(m);
+  const r = e.currentTarget.getBoundingClientRect();
+  m.style.top = (r.bottom + 6) + "px";
+  m.style.left = Math.max(8, Math.min(r.left, innerWidth - m.offsetWidth - 8)) + "px";
+  m.querySelector("[data-un]").addEventListener("click", () => { m.remove(); window.print(); });
+  m.querySelector("[data-tout]").addEventListener("click", () => { m.remove(); imprimerBatiment(bat, freres); });
+  setTimeout(() => document.addEventListener("click", function h(ev){
+    if (!m.contains(ev.target)) { m.remove(); document.removeEventListener("click", h); }
+  }), 0);
+});
+document.getElementById("bTheme").addEventListener("click", () => {
+  const r = document.documentElement;
+  const dark = r.getAttribute("data-theme") === "dark" ||
+    (!r.getAttribute("data-theme") && matchMedia("(prefers-color-scheme: dark)").matches);
+  r.setAttribute("data-theme", dark ? "light" : "dark");
+  try { localStorage.setItem("sc48.theme", dark ? "light" : "dark"); } catch (e) {}
+});
+document.getElementById("bExport").addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify({items:DOCS, v:1}, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "decomptes-surface-corrigee.json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+});
+document.getElementById("bImport").addEventListener("click", () => document.getElementById("fImport").click());
+document.getElementById("fImport").addEventListener("change", async e => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  try {
+    const data = JSON.parse(await f.text());
+    const items = Array.isArray(data) ? data : (data.items || []);
+    if (!items.length) throw new Error("vide");
+    const ids = new Set(items.map(x => x && x.id));
+    DOCS = mergeDocs(DOCS, items);
+    sortDocs();
+    cur = DOCS.find(x => ids.has(x.id)) || DOCS[0];
+    saveLocal(); renderAll();
+    setSync("ok", items.length + " décompte(s) importé(s)");
+  } catch (err) {
+    setSync("error", "Fichier illisible — export attendu au format JSON");
+  }
+  e.target.value = "";
+});
+window.addEventListener("beforeprint", () => { if (cur && !PRINT_BAT) buildPrint(compute(cur)); });
+
+try {
+  const t = localStorage.getItem("sc48.theme");
+  if (t) document.documentElement.setAttribute("data-theme", t);
+} catch (e) {}
+
+boot();
+</script>
+</body>
+</html>
